@@ -133,5 +133,6 @@ df = single.predict_affinity_dataframe(df, 'epitope', 'matched_hla')
 ***
 
 ## License
-This wrapper is available under GNU General Public License 
+This wrapper is available under GNU General Public License.
+
 NetMHCpan is distributed by DTU Health Tech (https://services.healthtech.dtu.dk/services/NetMHCpan-4.1/) — please respect their licensing terms.
