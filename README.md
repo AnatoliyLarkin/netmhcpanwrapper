@@ -32,7 +32,7 @@ The wrapper supports two main prediction regimes: **single allele** and **pan/su
 - If no family or unknown family → performs a smart **two-round search**:
   1. First round: finds the best supergroup using representative alleles
   2. Second round: finds the best allele inside the winning supergroup
-- Gracefully handles completely HLA-free epitope lists
+- Handles HLA-free epitope lists
 
 **Best for**: Large epitope sets with partial or no HLA information.
 
