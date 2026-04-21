@@ -21,6 +21,36 @@ def run_netmhcpan(prediction_mode: str,
                   hla_column: str = None        #for single prediction
                   ):
     
+    """Entry point that dispatches peptide–HLA affinity prediction in a chosen mode.
+
+    Validates environment prerequisites (tmp directory, dataset files, core count,
+    netMHCpan binary) before instantiating the appropriate predictor and running
+    predictions on the supplied DataFrame.
+
+    Args:
+        prediction_mode (str): Either 'pan' (pan-HLA search across all supergroups)
+            or 'single' (prediction against a user-supplied specific allele).
+        path_to_netmhcpan (str): Path to netMHCpan directory.
+        df (pd.DataFrame): Input DataFrame containing at minimum the epitope column
+            and, depending on mode, an HLA or supergroup column.
+        epitope_colname (str): Name of the column containing peptide sequences.
+        supergroup_column (str, optional): For 'pan' mode — name of the column
+            containing HLA supergroup labels to narrow the allele search.
+            Defaults to None (full pan-HLA search).
+        hla_column (str, optional): For 'single' mode — name of the column
+            containing raw HLA allele strings to be normalised and predicted against.
+            Defaults to None.
+
+    Returns:
+        pd.DataFrame: The input DataFrame with prediction result columns appended
+            (columns vary by mode; see PanPredictor and SinglePredictor for details).
+
+    Raises:
+        ValueError: If dataset files are missing, N_CORES is not configured,
+            netMHCpan cannot be initialised, or an unknown prediction_mode is given.
+    """
+
+    
     if not (os.path.exists(TMPDIR) or os.path.isdir(TMPDIR)):
         subprocess.run(f'mkdir {TMPDIR}', shell = True)
 

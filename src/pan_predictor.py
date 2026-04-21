@@ -11,7 +11,34 @@ from multiprocessing import Pool
 
 class PanPredictor:
 
+    """Predicts MHC-I peptide binding affinity across all HLA supergroups using netMHCpan.
+
+    Implements a two-round pan-HLA prediction strategy: first identifies the best
+    HLA supergroup via representative alleles, then finds the best individual allele
+    within that supergroup. Supports multiprocessing for batch predictions.
+
+    Attributes:
+        PATH_TO_NETMHCPAN (Path): Path to the netMHCpan executable directory.
+        PATH_TO_SUPERGROUPS (Path): Path to the HLA supergroups definition file.
+        TMPDIR (Path): Directory for temporary input/output files.
+        n_cores (int): Number of parallel worker processes.
+        _supergroups (dict | None): Cached supergroup data after first load.
+    """
+
+
     def __init__(self, path_to_netmhcpan, path_to_supergroups, tmpdir, n_cores=4):
+
+        """Initializes PanPredictor with paths and runtime configuration.
+
+        Args:
+            path_to_netmhcpan (Path | str): Path to the netMHCpan executable directory.
+            path_to_supergroups (Path | str): Path to the HLA supergroups file.
+            tmpdir (Path | str): Directory for temporary files.
+            n_cores (int, optional): Number of parallel worker processes
+        """
+
+
+
         self.PATH_TO_NETMHCPAN = path_to_netmhcpan
         self.PATH_TO_SUPERGROUPS = path_to_supergroups
         self.TMPDIR = tmpdir
@@ -35,9 +62,40 @@ class PanPredictor:
         return supergroups
 
     def validate_peptide(self, epitope):
+        """Validates that a peptide sequence contains only canonical amino acid characters.
+
+        Args:
+            epitope (str): The peptide sequence to validate.
+
+        Returns:
+            bool: True if the sequence consists solely of standard amino acid
+                single-letter codes, False otherwise.
+        """
+
         return bool(re.match(r"^[ACDEFGHIKLMNPQRSTVWY]+$", epitope))
 
     def predict_affinnity(self, epitope, hla):
+
+        """Runs netMHCpan for a single peptide–HLA pair and parses the binding output.
+
+        Writes the peptide to a temporary file, invokes netMHCpan in peptide mode
+        with binding affinity output (-BA), then extracts Score_BA, %Rank_BA, and
+        Aff(nM) from stdout. Temporary files are always cleaned up.
+
+        Args:
+            epitope (str): A validated peptide sequence.
+            hla (str): HLA allele string in netMHCpan format (e.g. 'HLA-A0201').
+
+        Returns:
+            tuple[float, float, float]: A tuple of
+                (Score_BA, %Rank_BA, Aff(nM)).
+
+        Raises:
+            ValueError: If epitope validation fails or binding data cannot be
+                extracted from netMHCpan output.
+        """
+
+
         if not self.validate_peptide(epitope):
             raise ValueError(f'Epitope validation for {epitope} failed')
 
@@ -80,6 +138,21 @@ class PanPredictor:
 
     @staticmethod
     def _worker(args):
+        """Multiprocessing-compatible static worker that predicts affinity for one row.
+
+        Instantiates a fresh PanPredictor and
+        calls _predict_row. Returns NaN values on any exception to avoid killing
+        the worker pool.
+
+        Args:
+            args (tuple): A tuple of
+                (epitope, helper_val, path_to_netmhcpan, path_to_supergroups, tmpdir).
+
+        Returns:
+            tuple[str | float, float, float, float]: A tuple of
+                (best_allele, best_score_ba, best_%Rank_BA, best_Aff_nM),
+                or (nan, nan, nan, nan) on failure.
+        """
         epitope, helper_val, path_to_netmhcpan, path_to_supergroups, tmpdir = args
         try:
             predictor = PanPredictor(path_to_netmhcpan, path_to_supergroups, tmpdir)
@@ -88,6 +161,28 @@ class PanPredictor:
             return (np.nan, np.nan, np.nan, np.nan)
 
     def _predict_row(self, epitope, helper_val):
+        """Core prediction logic for a single epitope with optional supergroup hint.
+
+        Performs either one or two rounds of netMHCpan calls depending on whether
+        a valid supergroup hint is provided:
+
+        - No hint / invalid hint: Round 1 screens all supergroup representatives to
+        find the best supergroup; Round 2 screens all alleles within that supergroup.
+        - Valid hint: Screens only alleles within the specified supergroup (one round).
+
+        The best allele is selected by jointly minimising %Rank_BA and Aff(nM).
+
+        Args:
+            epitope (str): The peptide sequence to predict.
+            helper_val (str | None): A supergroup label to restrict the search, or
+                None to perform full pan-HLA search.
+
+        Returns:
+            tuple[str | float, float | None, float, float]: A tuple of
+                (best_allele, best_score_ba, best_%Rank_BA, best_Aff_nM),
+                or (nan, nan, nan, nan) if no valid prediction is found.
+        """
+
         supergroups = self._load_supergroups()
 
         best_rank = 1000
@@ -166,6 +261,28 @@ class PanPredictor:
         return (best_allele, best_score_ba, best_rank, best_aff)
 
     def pan_hla_matching_prediction(self, df, epitope_column, helper_column=None):
+
+        """Runs pan-HLA affinity prediction on all rows of a DataFrame in parallel.
+
+        Distributes rows across worker processes using multiprocessing.Pool.
+        Appends prediction results as new columns to the input DataFrame.
+
+        Args:
+            df (pd.DataFrame): Input DataFrame containing at least the epitope column
+                and optionally a supergroup helper column.
+            epitope_column (str): Name of the column containing peptide sequences.
+            helper_column (str, optional): Name of the column containing supergroup
+                labels used to narrow the allele search. Defaults to None.
+
+        Returns:
+            pd.DataFrame: The input DataFrame with four new columns appended:
+                - 'Allele' (str): Best-matching HLA allele.
+                - '%Rank Score_BA' (float): Binding affinity score for that allele.
+                - '%Rank_BA' (float): Percentile rank of binding affinity.
+                - 'Aff(nM)' (float): Predicted binding affinity in nanomolar.
+        """
+
+
         args = [
             (
                 row[epitope_column],
