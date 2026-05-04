@@ -15,7 +15,7 @@ class PanPredictor:
 
     Implements a two-round pan-HLA prediction strategy: first identifies the best
     HLA supergroup via representative alleles, then finds the best individual allele
-    within that supergroup. Supports multiprocessing for batch predictions.
+    within that supergroup. Supports multiprocessing for batch predictions. 
 
     Attributes:
         PATH_TO_NETMHCPAN (Path): Path to the netMHCpan executable directory.

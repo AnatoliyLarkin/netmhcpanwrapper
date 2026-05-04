@@ -1,13 +1,12 @@
 # Python NetMHCpan Wrapper
 
-**A clean and efficient Python wrapper for NetMHCpan-4.2**
 
 Seamless integration of NetMHCpan binding predictions into pandas-based bioinformatics workflows.
 
 ## Description
 
 This package provides a user-friendly Python interface to **NetMHCpan-4.2** (standalone version).  
-It handles peptide-MHC class I binding affinity predictions while solving common real-world problems such as inconsistent HLA nomenclature and missing HLA information.
+It handles peptide-MHC class I binding affinity predictions while solving problems of inconsistent HLA nomenclature and missing HLA information.
 
 The wrapper supports two main prediction regimes: **single allele** and **pan/supergroup** prediction, with built-in parallel processing for speed.
 
@@ -28,11 +27,13 @@ The wrapper supports two main prediction regimes: **single allele** and **pan/su
 
 ### 2. Pan / Supergroup Mode (`pan`)
 - Works with or without a helper (supergroup) column
+- Supports predictions for Homo sapiens ('hs'), Mus musculus ('mmu) or pan-prediction without species specification (run_netmhcpan, 'species' argument)
 - If a valid family is given (e.g. `HLA-A01`, `HLA-B15`, `HLA-E01`), searches only inside that family
 - If no family or unknown family → performs a smart **two-round search**:
   1. First round: finds the best supergroup using representative alleles
   2. Second round: finds the best allele inside the winning supergroup
 - Handles HLA-free epitope lists
+
 
 **Best for**: Large epitope sets with partial or no HLA information.
 
@@ -45,6 +46,8 @@ mhc_netmhcpan_wrapper/
 │   ├── config.py
 │   ├── run_netmhcpan.py          # Main high-level function
 │   ├── single_predictor.py
+|   ├── mhc_supergroups_hs.txt
+|   ├── mhc_supergroups_mmu.txt
 │   └── pan_predictor.py
 ├── datasets/
 │   ├── allele_nomenclature_mapping.txt

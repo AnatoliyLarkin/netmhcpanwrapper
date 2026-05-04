@@ -16,7 +16,7 @@ def run_netmhcpan(prediction_mode: str,
                   path_to_netmhcpan: str,
                   df: pd.DataFrame,
                   epitope_colname: str,
-
+                  species: str = None,
                   supergroup_column: str = None, #for panprediction
                   hla_column: str = None        #for single prediction
                   ):
@@ -34,6 +34,7 @@ def run_netmhcpan(prediction_mode: str,
         df (pd.DataFrame): Input DataFrame containing at minimum the epitope column
             and, depending on mode, an HLA or supergroup column.
         epitope_colname (str): Name of the column containing peptide sequences.
+        epitope_colname (str, optional): specify species for panprediction. hs (Homo sapiens) and mmu (Mus musculus) are currently supported
         supergroup_column (str, optional): For 'pan' mode — name of the column
             containing HLA supergroup labels to narrow the allele search.
             Defaults to None (full pan-HLA search).
@@ -54,6 +55,8 @@ def run_netmhcpan(prediction_mode: str,
     if not (os.path.exists(TMPDIR) or os.path.isdir(TMPDIR)):
         subprocess.run(f'mkdir {TMPDIR}', shell = True)
 
+    global PATH_TO_SUPERGROUPS
+
     if not (os.path.exists(PATH_TO_MAPPING) or os.path.exists(PATH_TO_SUPERGROUPS)):
         raise ValueError('datasets/mapping or datasets/supergroups files not found. Ensure that original repo structure is not violated or configure pathways in config.py')
     
@@ -66,6 +69,13 @@ def run_netmhcpan(prediction_mode: str,
         raise ValueError('Could not initialize netMHCpan. Adjust PATH_TO_NETMHCPAN in config.py and ensure that your netMHCpan is properly configured')
     
     if prediction_mode == 'pan':
+
+        if species:
+            if not species in ['hs', 'mmu']:
+                raise ValueError(f'Unknown species {species}. Please select either mmu or hs, or dont specify species')
+            
+            PATH_TO_SUPERGROUPS = '/'.join(str(PATH_TO_SUPERGROUPS).split('/')[:-1]) + f'/mhc_supergroups_{species}.txt'
+
 
         predictor = PanPredictor(
             path_to_netmhcpan=path_to_netmhcpan,
