@@ -7,5 +7,3 @@ H-2-Kk;H-2-Kk;0
 H-2-Kq;H-2-Kq;0
 H-2-Ld;H-2-Ld;0
 H-2-Lq;H-2-Lq;0
-H-2-Qa1;H-2-Qa1;0
-H-2-Qa2;H-2-Qa2;0

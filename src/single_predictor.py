@@ -41,7 +41,7 @@ class SinglePredictor:
         self.n_cores = n_cores
 
 
-        self.ALPHABET  = {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'}
+        self.ALPHABET  = {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', 'X'}
 
 
     def validate_peptide(self, epitope):

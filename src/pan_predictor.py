@@ -72,7 +72,7 @@ class PanPredictor:
                 single-letter codes, False otherwise.
         """
 
-        return bool(re.match(r"^[ACDEFGHIKLMNPQRSTVWY]+$", epitope))
+        return bool(re.match(r"^[ACDEFGHIKLMNPQRSTVWYX]+$", epitope))
 
     def predict_affinnity(self, epitope, hla):
 
