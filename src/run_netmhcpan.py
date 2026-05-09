@@ -34,7 +34,7 @@ def run_netmhcpan(prediction_mode: str,
         df (pd.DataFrame): Input DataFrame containing at minimum the epitope column
             and, depending on mode, an HLA or supergroup column.
         epitope_colname (str): Name of the column containing peptide sequences.
-        epitope_colname (str, optional): specify species for panprediction. hs (Homo sapiens) and mmu (Mus musculus) are currently supported
+        species (str, optional): specify species for panprediction. hs (Homo sapiens) and mmu (Mus musculus) are currently supported
         supergroup_column (str, optional): For 'pan' mode — name of the column
             containing HLA supergroup labels to narrow the allele search.
             Defaults to None (full pan-HLA search).
@@ -55,9 +55,9 @@ def run_netmhcpan(prediction_mode: str,
     if not (os.path.exists(TMPDIR) or os.path.isdir(TMPDIR)):
         subprocess.run(f'mkdir {TMPDIR}', shell = True)
 
-    global PATH_TO_SUPERGROUPS
+    path_to_supergroups = PATH_TO_SUPERGROUPS
 
-    if not (os.path.exists(PATH_TO_MAPPING) or os.path.exists(PATH_TO_SUPERGROUPS)):
+    if not (os.path.exists(PATH_TO_MAPPING) or os.path.exists(path_to_supergroups)):
         raise ValueError('datasets/mapping or datasets/supergroups files not found. Ensure that original repo structure is not violated or configure pathways in config.py')
     
     if not N_CORES:
@@ -74,12 +74,15 @@ def run_netmhcpan(prediction_mode: str,
             if not species in ['hs', 'mmu']:
                 raise ValueError(f'Unknown species {species}. Please select either mmu or hs, or dont specify species')
             
-            PATH_TO_SUPERGROUPS = '/'.join(str(PATH_TO_SUPERGROUPS).split('/')[:-1]) + f'/mhc_supergroups_{species}.txt'
+            path_to_supergroups = '/'.join(str(path_to_supergroups).split('/')[:-1]) + f'/mhc_supergroups_{species}.txt'
+
+
+
 
 
         predictor = PanPredictor(
             path_to_netmhcpan=path_to_netmhcpan,
-            path_to_supergroups=PATH_TO_SUPERGROUPS,
+            path_to_supergroups=path_to_supergroups,
             tmpdir=TMPDIR,
             n_cores=N_CORES,
         )

@@ -27,7 +27,7 @@ The wrapper supports two main prediction regimes: **single allele** and **pan/su
 
 ### 2. Pan / Supergroup Mode (`pan`)
 - Works with or without a helper (supergroup) column
-- Supports predictions for Homo sapiens ('hs'), Mus musculus ('mmu) or pan-prediction without species specification (run_netmhcpan, 'species' argument)
+- Supports predictions for Homo sapiens ('hs'), Mus musculus ('mmu) or pan-prediction without species specification 
 - If a valid family is given (e.g. `HLA-A01`, `HLA-B15`, `HLA-E01`), searches only inside that family
 - If no family or unknown family → performs a smart **two-round search**:
   1. First round: finds the best supergroup using representative alleles
@@ -105,6 +105,7 @@ result_pan = run_netmhcpan(
     df=pan_df,
     epitope_colname='epitope',
     supergroup_column='family'   # can be None for pure pan search
+    species = 'None' #can be hs or mmu for species-restricted pan-prediction
 )
 ```
 
